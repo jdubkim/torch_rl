@@ -7,9 +7,9 @@ import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-
 # Config
 parser = argparse.ArgumentParser(description='DQN with PyTorch')
+parser.add_argument('--network', type=str, default='mlp', help='Network Type')
 parser.add_argument('--env', type=str, default='CartPole-v1', help='Environment')
 parser.add_argument('--algo', type=str, default='dqn', help='RL algorithm to run')
 parser.add_argument('--mode', type=str, default='train', help='Train or evaluation')
@@ -28,10 +28,10 @@ args = parser.parse_args()
 device = torch.device('cuda', index=args.gpu_index) if torch.cuda.is_available() else torch.device('cpu')
 
 if args.algo == 'dqn':
-    from dqn import DQNAgent
+    from agents.dqn import DQNAgent
+
 
 def main():
-
     # Initialise Environment
     env = gym.make(args.env)
     obs_dim = env.observation_space.shape[0]
@@ -63,8 +63,8 @@ def main():
     # Create a Summary object
     if args.tensorboard and args.load is None:
         dir_name = 'runs/' + args.env + '/' \
-                           + args.algo + '_s_' + str(args.seed) \
-                           + '_t_' + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+                   + args.algo + '_s_' + str(args.seed) \
+                   + '_t_' + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         writer = SummaryWriter(log_dir=dir_name)
 
     start_time = time.time()
@@ -93,7 +93,7 @@ def main():
                 writer.add_scalar('Train/AverageReturns', train_episode_return, i)
 
         # Evaluation
-        if (i+1) % args.eval_per_train == 0:
+        if (i + 1) % args.eval_per_train == 0:
             agent.eval_mode = True
 
             for _ in range(args.max_step):
@@ -128,10 +128,10 @@ def main():
                         os.mkdir('./saved_model')
 
                     ckpt_path = os.path.join('./save_model/' + args.env + '_' + args.algo \
-                                                                        + '_s_' + str(args.seed) \
-                                                                        + '_i_' + str(i + 1) \
-                                                                        + '_tr_' + str(round(train_episode_return, 2)) \
-                                                                        + '_er_' + str(round(eval_episode_return, 2)) + '.pt')
+                                             + '_s_' + str(args.seed) \
+                                             + '_i_' + str(i + 1) \
+                                             + '_tr_' + str(round(train_episode_return, 2)) \
+                                             + '_er_' + str(round(eval_episode_return, 2)) + '.pt')
 
                     if args.algo == 'dqn':
                         torch.save(agent.qf.state_dict(), ckpt_path)
@@ -148,5 +148,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
